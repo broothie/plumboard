@@ -22,6 +22,6 @@
     "db:types": "sh -c 'tmp=\"$(mktemp -t plumboard-database-types)\" && supabase gen types --lang=typescript --linked --schema public > \"$tmp\" && mv \"$tmp\" packages/core/src/database.types.ts'"
   },
   "devDependencies": {
-    "supabase": "^2.48.3"
+    "@instantdb/admin": "^1.0.0"
   }
 }

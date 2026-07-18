@@ -5,7 +5,6 @@ import { BoardSidebar, BoardView } from "@plumboard/ui";
 import { Navigate, Route, Routes, useMatch, useNavigate, useParams } from "react-router-dom";
 import md5 from "blueimp-md5";
 import { AuthProvider, useAuth } from "../auth/AuthProvider";
-import { supabase } from "../auth/supabase";
 import { AccountPage } from "./AccountPage";
 import { BoardsPage } from "./BoardsPage";
 import { EmptyBoardsState } from "./EmptyBoardsState";
@@ -277,7 +276,7 @@ function AppShell({ themePreference, onThemePreferenceChange }: AppShellProps) {
   const addBoard = useAppStore((state) => state.addBoard);
   const deleteBoard = useAppStore((state) => state.deleteBoard);
   const setActiveBoard = useAppStore((state) => state.setActiveBoard);
-  const { isConfigured, isLoading, user, username, saveUsername, signOut } = useAuth();
+  const { isLoading, user, username, saveUsername, signOut } = useAuth();
   const [isMobileLayout, setIsMobileLayout] = useState(resolveIsMobileLayout);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [boardIdNeedingMetadataEdit, setBoardIdNeedingMetadataEdit] = useState<string | null>(null);
@@ -376,7 +375,7 @@ function AppShell({ themePreference, onThemePreferenceChange }: AppShellProps) {
     };
   }, [isCreatingBoard]);
 
-  if (!isConfigured) {
+  if (!import.meta.env.VITE_INSTANT_APP_ID) {
     return <MissingSupabaseConfig />;
   }
 
@@ -521,79 +520,19 @@ function AppShell({ themePreference, onThemePreferenceChange }: AppShellProps) {
     }
   };
 
-  const handleInviteCollaborator = async (boardId: string, email: string) => {
-    if (!supabase) {
-      return { error: "Supabase is not configured." };
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      return { error: "Enter an email address." };
-    }
-
-    const { error } = await supabase.rpc("invite_board_member", {
-      p_board_id: boardId,
-      p_invitee_email: normalizedEmail,
-      p_role: "editor",
-    });
-
-    return error ? { error: error.message } : {};
+  const handleInviteCollaborator = async (_boardId: string, _email: string) => {
+    // TODO: implement board member invites via InstantDB admin SDK or a custom edge function
+    return { error: "Board invites are not yet supported in this version." };
   };
 
-  const handleUploadImage = async (file: File) => {
-    if (!supabase || !user) {
-      throw new Error("You must be signed in to upload files.");
-    }
-
-    const extension = file.name.split(".").pop()?.toLowerCase() || "bin";
-    const randomId = typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2, 10);
-    const objectPath = `${user.id}/${Date.now()}-${randomId}.${extension}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("note-images")
-      .upload(objectPath, file, {
-        upsert: false,
-        contentType: file.type || undefined,
-        cacheControl: "3600",
-      });
-
-    if (uploadError) {
-      throw new Error(uploadError.message);
-    }
-
-    const { data } = supabase.storage
-      .from("note-images")
-      .getPublicUrl(objectPath);
-
-    return {
-      src: data.publicUrl,
-      alt: file.name || "Uploaded file",
-      caption: file.name || undefined,
-    };
+  const handleUploadImage = async (_file: File) => {
+    // TODO: implement file uploads via InstantDB Storage or a separate storage provider
+    throw new Error("File uploads are not yet supported in this version.");
   };
 
-  const handleResolveLinkPreview = async (url: string): Promise<LinkPreviewResponse> => {
-    if (!supabase) {
-      return {};
-    }
-
-    const { data, error } = await supabase.functions.invoke<LinkPreviewResponse>("link-preview", {
-      body: { url },
-    });
-
-    if (error || !data || typeof data !== "object") {
-      return {};
-    }
-
-    return {
-      url: typeof data.url === "string" ? data.url : undefined,
-      siteName: typeof data.siteName === "string" ? data.siteName : undefined,
-      title: typeof data.title === "string" ? data.title : undefined,
-      description: typeof data.description === "string" ? data.description : undefined,
-      previewImage: typeof data.previewImage === "string" ? data.previewImage : undefined,
-    };
+  const handleResolveLinkPreview = async (_url: string): Promise<LinkPreviewResponse> => {
+    // TODO: implement link preview via a standalone edge function or third-party service
+    return {};
   };
   const accountAvatarUrl = resolveGravatarUrl(
     normalizeGravatarHash(resolveEmailHash(user.email) ?? user.id),

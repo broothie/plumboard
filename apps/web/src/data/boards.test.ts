@@ -1,40 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { useAppStore, type Board } from "@plumboard/core";
-import {
-  assembleBoards,
-  mapNoteRowToNote,
-  mapNoteToRow,
-  mapBoardToRow,
-  resolveNoteIdsToSoftDelete,
-} from "./boards";
+import { describe, expect, it } from "vitest";
+import { assembleBoardsFromQuery, mapInstantNoteToNote } from "./boards";
+import type { QueryData } from "./boards";
 
-type SampleNoteRow = {
-  id: string;
-  board_id: string;
-  user_id: string;
-  type: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  title: string | null;
-  body: string | null;
-  src: string | null;
-  alt: string | null;
-  caption: string | null;
-  url: string | null;
-  site_name: string | null;
-  description: string | null;
-  preview_image: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-};
-
-const noteNoteRow: SampleNoteRow = {
-  id: "note-note",
-  board_id: "board-1",
-  user_id: "user-1",
+const baseNote = {
+  id: "note-1",
   type: "text",
   x: 16,
   y: 24,
@@ -46,23 +15,16 @@ const noteNoteRow: SampleNoteRow = {
   alt: null,
   caption: null,
   url: null,
-  site_name: null,
+  siteName: null,
   description: null,
-  preview_image: null,
-  created_at: "2026-01-01T00:00:00.000Z",
-  updated_at: "2026-01-01T00:00:00.000Z",
-  deleted_at: null,
+  previewImage: null,
+  createdAt: 1000,
 };
 
-beforeEach(() => {
-  useAppStore.setState({ boards: [], activeBoardId: "" });
-});
-
-describe("mapNoteRowToNote", () => {
-  it("maps a text note row", () => {
-    const note = mapNoteRowToNote(noteNoteRow);
-    expect(note).toEqual({
-      id: "note-note",
+describe("mapInstantNoteToNote", () => {
+  it("maps a text note", () => {
+    expect(mapInstantNoteToNote(baseNote)).toEqual({
+      id: "note-1",
       type: "text",
       x: 16,
       y: 24,
@@ -73,187 +35,96 @@ describe("mapNoteRowToNote", () => {
     });
   });
 
-  it("throws for unknown note types", () => {
-    const invalidRow = {
-      ...noteNoteRow,
-      type: "video",
-    } as unknown as SampleNoteRow;
-
-    expect(() => mapNoteRowToNote(invalidRow)).toThrowError(
-      "Unsupported note row type: video",
-    );
-  });
-});
-
-describe("board row helpers", () => {
-  it("maps rows to domain models", () => {
-    const boardRowsInput = [
-      {
-        id: "board-1",
-        title: "Ideas",
-        description: "Board description",
-        user_id: "user-1",
-        created_at: "2026-01-01T00:00:00.000Z",
-        updated_at: "2026-01-01T00:00:00.000Z",
-        deleted_at: null,
-      },
-      {
-        id: "board-2",
-        title: "Archive",
-        description: "Other",
-        user_id: "user-1",
-        created_at: "2026-01-01T00:00:00.000Z",
-        updated_at: "2026-01-01T00:00:00.000Z",
-        deleted_at: null,
-      },
-    ];
-
-    const imageNoteRow = {
-      ...noteNoteRow,
-      id: "note-image",
+  it("maps an image note", () => {
+    const row = {
+      ...baseNote,
+      id: "note-img",
       type: "image",
-      board_id: "board-1",
       src: "/asset.png",
       alt: "Alt text",
-    } as unknown as SampleNoteRow;
+    };
+    expect(mapInstantNoteToNote(row)).toEqual({
+      id: "note-img",
+      type: "image",
+      x: 16,
+      y: 24,
+      width: 300,
+      height: 220,
+      src: "/asset.png",
+      alt: "Alt text",
+      caption: undefined,
+    });
+  });
 
-    const linkNoteRow = {
-      ...noteNoteRow,
+  it("maps a link note", () => {
+    const row = {
+      ...baseNote,
       id: "note-link",
       type: "link",
-      board_id: "board-1",
-      title: "Note title",
-      description: "desc",
+      title: "Page title",
       url: "https://example.com",
-      site_name: "example.com",
-      preview_image: "/preview.png",
-    } as unknown as SampleNoteRow;
+      siteName: "example.com",
+      description: "desc",
+      previewImage: "/preview.png",
+    };
+    expect(mapInstantNoteToNote(row)).toEqual({
+      id: "note-link",
+      type: "link",
+      x: 16,
+      y: 24,
+      width: 300,
+      height: 220,
+      url: "https://example.com",
+      siteName: "example.com",
+      title: "Page title",
+      description: "desc",
+      previewImage: "/preview.png",
+    });
+  });
 
-    const boardModels = assembleBoards(
-      boardRowsInput,
-      [noteNoteRow, imageNoteRow, linkNoteRow],
-    );
-
-    expect(boardModels).toEqual([
-      {
-        id: "board-1",
-        title: "Ideas",
-        description: "Board description",
-        ownerUserId: "user-1",
-        notes: [
-          {
-            id: "note-note",
-            type: "text",
-            x: 16,
-            y: 24,
-            width: 300,
-            height: 220,
-            title: "Note title",
-            body: "Note body",
-          },
-          {
-            id: "note-image",
-            type: "image",
-            x: 16,
-            y: 24,
-            width: 300,
-            height: 220,
-            src: "/asset.png",
-            alt: "Alt text",
-            caption: undefined,
-          },
-          {
-            id: "note-link",
-            type: "link",
-            x: 16,
-            y: 24,
-            width: 300,
-            height: 220,
-            url: "https://example.com",
-            siteName: "example.com",
-            title: "Note title",
-            description: "desc",
-            previewImage: "/preview.png",
-          },
-        ],
-      },
-      {
-        id: "board-2",
-        title: "Archive",
-        description: "Other",
-        ownerUserId: "user-1",
-        notes: [],
-      },
-    ]);
+  it("throws for unknown note types", () => {
+    expect(() =>
+      mapInstantNoteToNote({ ...baseNote, type: "video" } as never),
+    ).toThrowError("Unsupported note type: video");
   });
 });
 
-describe("save mapping helpers", () => {
-  it("maps board and note data to insert payloads", () => {
-      const board: Board = {
-        id: "board-1",
-        title: "Workspace",
-        description: "Focus area",
-      notes: [
+describe("assembleBoardsFromQuery", () => {
+  it("returns boards sorted by createdAt with their notes", () => {
+    const data: QueryData = {
+      boards: [
         {
-          id: "note-note",
-          type: "text",
-          x: 0,
-          y: 0,
-          width: 260,
-          height: 190,
-          title: "Draft",
-          body: "Hello",
+          id: "board-2",
+          title: "Archive",
+          description: "Other",
+          createdAt: 2000,
+          owner: { id: "user-1" },
+          members: [],
+          notes: [],
+        },
+        {
+          id: "board-1",
+          title: "Ideas",
+          description: "Board description",
+          createdAt: 1000,
+          owner: { id: "user-1" },
+          members: [],
+          notes: [baseNote],
         },
       ],
     };
 
-    expect(mapBoardToRow("user-1", board)).toEqual({
-      id: "board-1",
-      user_id: "user-1",
-      title: "Workspace",
-      description: "Focus area",
-      deleted_at: null,
-    });
-
-    expect(mapNoteToRow("user-1", board.id, board.notes[0])).toEqual({
-      id: "note-note",
-      board_id: "board-1",
-      user_id: "user-1",
-      type: "text",
-      x: 0,
-      y: 0,
-      width: 260,
-      height: 190,
-      title: "Draft",
-      body: "Hello",
-      src: null,
-      alt: null,
-      caption: null,
-      url: null,
-      site_name: null,
-      description: null,
-      preview_image: null,
-      deleted_at: null,
-    });
+    const boards = assembleBoardsFromQuery(data);
+    expect(boards).toHaveLength(2);
+    expect(boards[0].id).toBe("board-1");
+    expect(boards[1].id).toBe("board-2");
+    expect(boards[0].notes).toHaveLength(1);
+    expect(boards[0].notes[0].type).toBe("text");
+    expect(boards[0].ownerUserId).toBe("user-1");
   });
-});
 
-describe("resolveNoteIdsToSoftDelete", () => {
-  it("skips notes that belong to soft-deleted boards", () => {
-    const existingNotes = [
-      { id: "note-on-active-board", board_id: "board-1", deleted_at: null },
-      { id: "note-on-removed-board", board_id: "board-2", deleted_at: null },
-      { id: "already-deleted", board_id: "board-1", deleted_at: "2026-01-01T00:00:00.000Z" },
-      { id: "still-present", board_id: "board-1", deleted_at: null },
-    ];
-
-    const noteIdsToSoftDelete = resolveNoteIdsToSoftDelete(
-      existingNotes,
-      new Set(["board-1"]),
-      new Set(["still-present"]),
-    );
-
-    expect(noteIdsToSoftDelete).toEqual(["note-on-active-board"]);
+  it("returns empty array for empty query data", () => {
+    expect(assembleBoardsFromQuery({})).toEqual([]);
+    expect(assembleBoardsFromQuery({ boards: [] })).toEqual([]);
   });
 });

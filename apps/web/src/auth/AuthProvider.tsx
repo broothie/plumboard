@@ -1,19 +1,20 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { hasSupabaseConfig, supabase } from "./supabase";
+import { id } from "@instantdb/react";
+import { db } from "../db";
+
+type AuthUser = {
+  id: string;
+  email?: string;
+};
 
 type AuthContextValue = {
-  isConfigured: boolean;
   isLoading: boolean;
-  session: Session | null;
-  user: User | null;
+  user: AuthUser | null;
   username: string | null;
   signInWithGoogle: () => Promise<{ error?: string }>;
   saveUsername: (username: string) => Promise<{ error?: string }>;
@@ -27,103 +28,74 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(hasSupabaseConfig);
+  const { isLoading: authLoading, user: instantUser } = db.useAuth();
+
+  const { data: profileData, isLoading: profileLoading } = db.useQuery(
+    instantUser
+      ? {
+          profiles: {
+            $: { where: { "user.id": instantUser.id } },
+          },
+        }
+      : null,
+  );
+
+  const isLoading = authLoading || (!!instantUser && profileLoading);
+  const user: AuthUser | null = instantUser
+    ? { id: instantUser.id, email: instantUser.email ?? undefined }
+    : null;
   const username =
-    typeof session?.user.user_metadata?.username === "string"
-      ? session.user.user_metadata.username
-      : null;
-
-  useEffect(() => {
-    if (!supabase) {
-      setIsLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setSession(data.session);
-      setIsLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      setIsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+    (profileData?.profiles?.[0] as { username?: string } | undefined)?.username ?? null;
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      isConfigured: hasSupabaseConfig,
       isLoading,
-      session,
-      user: session?.user ?? null,
+      user,
       username,
       async signInWithGoogle() {
-        if (!supabase) {
-          return { error: "Supabase is not configured yet." };
+        try {
+          const url = db.auth.createAuthorizationURL({
+            clientName: "google-web",
+            redirectURL: window.location.origin,
+          });
+          window.location.href = url;
+          return {};
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : String(err) };
         }
-
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: window.location.origin,
-          },
-        });
-
-        return error ? { error: error.message } : {};
       },
       async saveUsername(nextUsername) {
-        if (!supabase) {
-          return { error: "Supabase is not configured yet." };
+        if (!instantUser) {
+          return { error: "Not signed in." };
         }
 
         const normalizedUsername = nextUsername.trim().toLowerCase();
+        const existingProfile = profileData?.profiles?.[0] as
+          | { id?: string }
+          | undefined;
 
-        const { data, error } = await supabase.auth.updateUser({
-          data: {
-            username: normalizedUsername,
-          },
-        });
-
-        if (error) {
-          return { error: error.message };
+        try {
+          const profileId = existingProfile?.id ?? id();
+          await db.transact(
+            db.tx.profiles[profileId]
+              .update({ username: normalizedUsername })
+              .link({ user: instantUser.id }),
+          );
+          return {};
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : String(err) };
         }
-
-        setSession((currentSession) =>
-          currentSession
-            ? {
-                ...currentSession,
-                user: data.user ?? currentSession.user,
-              }
-            : currentSession,
-        );
-
-        return {};
       },
       async signOut() {
-        if (!supabase) {
-          return { error: "Supabase is not configured yet." };
+        try {
+          await db.auth.signOut();
+          return {};
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : String(err) };
         }
-
-        const { error } = await supabase.auth.signOut({ scope: "local" });
-
-        return error ? { error: error.message } : {};
       },
     }),
-    [isLoading, session, username],
+    [isLoading, user, username, instantUser, profileData],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

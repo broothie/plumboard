@@ -1,6 +1,6 @@
 import { Card, H2, Paragraph, Text, YStack, useTheme } from "tamagui";
 
-export function MissingSupabaseConfig() {
+export function MissingInstantConfig() {
   const theme = useTheme();
 
   return (
@@ -34,15 +34,17 @@ export function MissingSupabaseConfig() {
                 color: theme.textSecondary.val,
               }}
             >
-              Supabase setup
+              InstantDB setup
             </Text>
             <H2 style={{ margin: 0, color: theme.textInk.val }}>
-              Auth is wired, but the client keys are missing
+              App ID is missing
             </H2>
             <Paragraph style={{ margin: 0, color: theme.textSecondary.val }}>
-              Add your Supabase project URL and publishable or anon key in
-              <Text style={{ fontFamily: "monospace", color: theme.textPrimary.val }}> apps/web/.env.local</Text> and reload the dev
-              server.
+              Add your InstantDB app ID in
+              <Text style={{ fontFamily: "monospace", color: theme.textPrimary.val }}>
+                {" "}apps/web/.env.local
+              </Text>{" "}
+              and reload the dev server.
             </Paragraph>
             <YStack
               gap="$2"
@@ -53,9 +55,8 @@ export function MissingSupabaseConfig() {
                 padding: "0.9rem",
               }}
             >
-              <Text style={{ fontFamily: "monospace", color: theme.textPrimary.val }}>VITE_SUPABASE_URL=...</Text>
               <Text style={{ fontFamily: "monospace", color: theme.textPrimary.val }}>
-                VITE_SUPABASE_PUBLISHABLE_KEY=...
+                VITE_INSTANT_APP_ID=...
               </Text>
             </YStack>
           </YStack>
@@ -64,3 +65,6 @@ export function MissingSupabaseConfig() {
     </YStack>
   );
 }
+
+// Keep old export name for backwards compatibility with App.tsx import
+export { MissingInstantConfig as MissingSupabaseConfig };
