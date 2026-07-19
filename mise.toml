@@ -3,8 +3,8 @@ node = "22"
 
 [tasks.dev]
 description = "Run the Plumboard web app"
-run = "npm run dev"
+run = "pnpm run dev"
 
 [tasks.build]
 description = "Build the Plumboard web app"
-run = "npm run build"
+run = "pnpm run build"

@@ -1,0 +1,36 @@
+name = "plumboard"
+main = "worker/worker.ts"
+compatibility_date = "2026-07-19"
+compatibility_flags = ["nodejs_compat"]
+upload_source_maps = true
+preview_urls = true
+
+[observability]
+enabled = true
+
+[assets]
+binding = "ASSETS"
+directory = "./dist/client"
+not_found_handling = "single-page-application"
+
+[vars]
+ACCESS_TEAM_DOMAIN = "https://jambrie-pages.cloudflareaccess.com"
+ACCESS_AUD = "753be7a0666af86bae647f55ddc1dd03b17110fac5cb0f04eabf801e2242e964"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "plumboard"
+database_id = "a1fafa34-a63d-4f45-9f6b-2e925fb33873"
+migrations_dir = "worker/migrations"
+
+[durable_objects]
+bindings = [{ name = "TLDRAW_DURABLE_OBJECT", class_name = "TldrawDurableObject" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TldrawDurableObject"]
+
+[[r2_buckets]]
+binding = "TLDRAW_BUCKET"
+bucket_name = "plumboard-assets"
+preview_bucket_name = "plumboard-assets-preview"

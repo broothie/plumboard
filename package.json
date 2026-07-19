@@ -1,27 +1,43 @@
 {
   "name": "plumboard",
   "private": true,
-  "packageManager": "npm@11.7.0",
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.15.0+sha512.266f8957a30d2be6e9468e5e66bcdedd35a794175f71b067ba8504d686cce1d0c0f429b33c323c3c569ad4891e667574a49ff71d1b89a22cc66f13c65818c578",
   "engines": {
     "node": ">=22 <23"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "env:local": "sh -c 'cp apps/web/.env.local.local apps/web/.env.local && echo \"Now using LOCAL Supabase in apps/web/.env.local\"'",
-    "env:prod": "sh -c 'cp apps/web/.env.local.prod apps/web/.env.local && echo \"Now using PROD Supabase in apps/web/.env.local\"'",
-    "env:which": "sh -c 'if [ -f apps/web/.env.local ]; then grep \"^VITE_SUPABASE_URL=\" apps/web/.env.local; else echo \"apps/web/.env.local is missing\"; fi'",
-    "dev:local": "npm run env:local && npm run dev",
-    "dev:prod": "npm run env:prod && npm run dev",
-    "dev": "npm --workspace @plumboard/web run dev",
-    "build": "npm --workspace @plumboard/web run build",
-    "preview": "npm --workspace @plumboard/web run preview",
-    "test": "npm --workspace @plumboard/web run test",
-    "db:types": "sh -c 'tmp=\"$(mktemp -t plumboard-database-types)\" && supabase gen types --lang=typescript --linked --schema public > \"$tmp\" && mv \"$tmp\" packages/core/src/database.types.ts'"
+    "dev": "pnpm run db:local && vite --host",
+    "build": "tsc && vite build",
+    "test": "tsc --noEmit",
+    "preview": "vite preview",
+    "deploy": "pnpm run build && pnpm run db:remote && wrangler deploy",
+    "db:local": "wrangler d1 migrations apply plumboard --local",
+    "db:remote": "wrangler d1 migrations apply plumboard --remote",
+    "cf:types": "wrangler types worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "@tldraw/sync": "^5.2.5",
+    "@tldraw/sync-core": "^5.2.5",
+    "@tldraw/editor": "^5.2.5",
+    "@tldraw/tlschema": "^5.2.5",
+    "cloudflare-workers-unfurl": "^0.0.8",
+    "jose": "^6.1.0",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-router-dom": "^7.13.2",
+    "tldraw": "^5.2.5"
   },
   "devDependencies": {
-    "supabase": "^2.48.3"
+    "@cloudflare/vite-plugin": "^1.29.1",
+    "@cloudflare/workers-types": "^5.20260719.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.8.3",
+    "vite": "^8.0.16",
+    "wrangler": "^4.75.0"
   }
 }
