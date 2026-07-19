@@ -1,0 +1,38 @@
+name = "plumboard"
+main = "worker/worker.ts"
+compatibility_date = "2026-07-19"
+compatibility_flags = ["nodejs_compat"]
+upload_source_maps = true
+preview_urls = true
+
+[observability]
+enabled = true
+
+[assets]
+binding = "ASSETS"
+directory = "./dist/client"
+not_found_handling = "single-page-application"
+
+[vars]
+# Required outside localhost. Use the full URL, for example:
+# https://your-team.cloudflareaccess.com
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "plumboard"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "worker/migrations"
+
+[durable_objects]
+bindings = [{ name = "TLDRAW_DURABLE_OBJECT", class_name = "TldrawDurableObject" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TldrawDurableObject"]
+
+[[r2_buckets]]
+binding = "TLDRAW_BUCKET"
+bucket_name = "plumboard-assets"
+preview_bucket_name = "plumboard-assets-preview"
