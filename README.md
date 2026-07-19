@@ -23,14 +23,18 @@ the Worker runtime. Open `http://localhost:5173`.
 
 ## Cloudflare setup
 
-1. Create a D1 database named `plumboard` and an R2 bucket named
-   `plumboard-assets`.
-2. Replace the placeholder IDs in `wrangler.toml`.
-3. Configure a Cloudflare Access self-hosted application for the deployed
-   hostname, using Google as an identity provider.
-4. Set `ACCESS_TEAM_DOMAIN` to the full Access team URL and `ACCESS_AUD` to the
-   application's audience tag.
-5. Run `pnpm run deploy`.
+1. The `plumboard` D1 database and `plumboard-assets` R2 buckets are already
+   provisioned and bound in `wrangler.toml`.
+2. The production Worker URL is protected by the `plumboard - Production`
+   Cloudflare Access policy and limited to the configured account email.
+3. The Access team domain and application audience are configured in
+   `wrangler.toml` so the Worker validates every application token.
+4. Run `pnpm run deploy` to apply migrations and deploy manually.
+
+Pushes to `main` also deploy through `.github/workflows/deploy.yml`. The
+workflow requires the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
+repository secrets.
 
 The Worker validates the `Cf-Access-Jwt-Assertion` header on every API and
-WebSocket request outside localhost.
+WebSocket request outside localhost. Update the production Access policy in the
+Cloudflare dashboard when another user should be allowed into the application.

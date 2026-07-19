@@ -14,15 +14,13 @@ directory = "./dist/client"
 not_found_handling = "single-page-application"
 
 [vars]
-# Required outside localhost. Use the full URL, for example:
-# https://your-team.cloudflareaccess.com
-ACCESS_TEAM_DOMAIN = ""
-ACCESS_AUD = ""
+ACCESS_TEAM_DOMAIN = "https://jambrie-pages.cloudflareaccess.com"
+ACCESS_AUD = "753be7a0666af86bae647f55ddc1dd03b17110fac5cb0f04eabf801e2242e964"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "plumboard"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "a1fafa34-a63d-4f45-9f6b-2e925fb33873"
 migrations_dir = "worker/migrations"
 
 [durable_objects]

@@ -35,8 +35,10 @@ tldraw Durable Object sync, R2 asset routes, link previews, and Cloudflare
 Access JWT validation are in the repository. Local board CRUD, reload
 persistence, and two-session realtime collaboration have been verified.
 
-Cloud deployment remains intentionally unconfigured until real D1/R2 resource
-IDs, an Access team domain, and an Access application audience are supplied.
+The D1 database, R2 buckets, Durable Object namespace, production Worker,
+GitHub deployment credentials, and email-scoped Cloudflare Access policy are
+provisioned. The Worker is configured to validate the Access application
+audience before accepting authenticated requests.
 
 ## Phase 1: Fresh Local Board
 
@@ -72,7 +74,7 @@ two sessions see edits and cursors in real time.
       delete board.
 - [x] On board creation, create metadata in D1 and lazily create the tldraw
       room when first opened.
-- [ ] Configure a Cloudflare Access application with Google as the initial
+- [x] Configure a Cloudflare Access application with Google as the initial
       identity provider and a permissive development policy.
 - [x] Validate Cloudflare Access identity assertions in the Worker, then create
       or update the D1 application user on the first authenticated request.
