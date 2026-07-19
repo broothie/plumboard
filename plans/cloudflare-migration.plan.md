@@ -2,14 +2,14 @@
 
 ## Goal
 
-Rebuild Plumboard around tldraw and Cloudflare. Do not migrate the current
-Supabase or InstantDB data model; start with a clean application database and
-bring forward only product behavior we want to keep.
+Rebuild Plumboard around tldraw and Cloudflare. Do not migrate the legacy data
+model; start with a clean application database and bring forward only product
+behavior we want to keep.
 
-This is a ground-up rebuild. The existing React Flow canvas, Supabase and
-InstantDB integrations, persistence hooks, tests, migrations, and deployment
-configuration are disposable. Delete and replace them freely rather than
-maintaining compatibility or preserving implementation details.
+This is a ground-up rebuild. The existing React Flow canvas, legacy backend
+integrations, persistence hooks, tests, migrations, and deployment configuration
+are disposable. Delete and replace them freely rather than maintaining
+compatibility or preserving implementation details.
 
 ## Target
 
@@ -40,7 +40,7 @@ IDs, an Access team domain, and an Access application audience are supplied.
 
 ## Phase 1: Fresh Local Board
 
-- [x] Remove the current Supabase and InstantDB client code, schemas, and
+- [x] Remove the legacy backend client code, schemas, and
       environment configuration.
 - [x] Remove React Flow board code and legacy board persistence code instead of
       adapting it to tldraw.
@@ -96,11 +96,11 @@ connect to a board they do not belong to.
 - [ ] Add profile/avatar UI after identity is stable.
 
 Success: the rebuilt app supports the small feature set we actively want,
-without carrying Supabase/InstantDB compatibility code.
+without carrying legacy backend compatibility code.
 
 ## Phase 5: Clean Up
 
-- [x] Remove legacy Supabase migrations, Edge Functions, scripts, and packages.
+- [x] Remove legacy database migrations, server functions, scripts, and packages.
 - [x] Remove InstantDB packages, schemas, permissions, and environment values.
 - [ ] Replace old board tests with tldraw and Worker/D1 integration tests.
 - [x] Add a single production deployment path using Wrangler.
