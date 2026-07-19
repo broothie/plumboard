@@ -13,8 +13,9 @@ A collaborative visual board built with tldraw and Cloudflare.
 ## Local development
 
 ```sh
-npm install
-npm run dev
+corepack enable
+pnpm install
+pnpm run dev
 ```
 
 The development command applies local D1 migrations before starting Vite and
@@ -29,7 +30,7 @@ the Worker runtime. Open `http://localhost:5173`.
    hostname, using Google as an identity provider.
 4. Set `ACCESS_TEAM_DOMAIN` to the full Access team URL and `ACCESS_AUD` to the
    application's audience tag.
-5. Run `npm run deploy`.
+5. Run `pnpm run deploy`.
 
 The Worker validates the `Cf-Access-Jwt-Assertion` header on every API and
 WebSocket request outside localhost.

@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "npm@11.7.0",
+  "packageManager": "pnpm@11.15.0+sha512.266f8957a30d2be6e9468e5e66bcdedd35a794175f71b067ba8504d686cce1d0c0f429b33c323c3c569ad4891e667574a49ff71d1b89a22cc66f13c65818c578",
   "engines": {
     "node": ">=22 <23"
   },
   "scripts": {
-    "dev": "npm run db:local && vite --host",
+    "dev": "pnpm run db:local && vite --host",
     "build": "tsc && vite build",
     "test": "tsc --noEmit",
     "preview": "vite preview",
-    "deploy": "npm run db:remote && wrangler deploy",
+    "deploy": "pnpm run build && pnpm run db:remote && wrangler deploy",
     "db:local": "wrangler d1 migrations apply plumboard --local",
     "db:remote": "wrangler d1 migrations apply plumboard --remote",
     "cf:types": "wrangler types worker-configuration.d.ts"
